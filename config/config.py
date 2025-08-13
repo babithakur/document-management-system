@@ -1,0 +1,1 @@
+DATABASE_URL = "postgresql+asyncpg://postgres:root123@localhost:5432/documents_db"
