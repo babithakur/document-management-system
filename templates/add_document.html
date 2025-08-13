@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Add Document{% endblock %}
+
+{% block content %}
+    <form class="upload-form" action="/add_document" method="post" enctype="multipart/form-data">
+        <h2>Upload PDF</h2>
+        <label for="title">Document Title</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="file">Select PDF File</label>
+        <input type="file" id="file" name="file" accept="application/pdf" required>
+
+        <button type="submit">Upload</button>
+  </form>
+
+{% endblock %}
