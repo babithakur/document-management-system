@@ -3,7 +3,30 @@
 {% block title %}List Documents{% endblock %}
 
 {% block content %}
-<h1>Uploaded PDF Documents</h1>
+<form method="get" action="/list_documents" class="filter-form">
+    <div class="filter-field">
+        <label for="author">Author</label>
+        <input type="text" name="author" id="author" value="{{ filters.author }}">
+    </div>
+    <div class="filter-field">
+        <label for="keyword">Keyword</label>
+        <input type="text" name="keyword" id="keyword" value="{{ filters.keyword }}">
+    </div>
+    <div class="filter-field">
+        <label for="date_from">From Date</label>
+        <input type="date" name="date_from" id="date_from" value="{{ filters.date_from }}">
+    </div>
+    <div class="filter-field">
+        <label for="date_to">To Date</label>
+        <input type="date" name="date_to" id="date_to" value="{{ filters.date_to }}">
+    </div>
+    <div class="filter-buttons">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="/list_documents" class="btn btn-secondary">Clear</a>
+    </div>
+</form>
+
+
 <table>
     <thead>
         <tr>

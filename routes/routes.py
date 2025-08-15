@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from fastapi import FastAPI, Request, UploadFile, File, Form, Depends, HTTPException
+from fastapi import FastAPI, Request, UploadFile, File, Form, Depends, HTTPException, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from dms.utils.pdf_utils import extract_pdf_metadata
@@ -9,6 +9,7 @@ from dms.dependencies.dependencies import get_session
 from dms.models.models import PDFDocument
 from sqlalchemy.future import select
 from pathlib import Path
+from sqlalchemy import and_
 import os
 
 router = APIRouter()
@@ -84,8 +85,50 @@ async def upload_document(
     return RedirectResponse(url="/add_document?success=Document uploaded successfully.", status_code=303)
 
 @router.get("/list_documents", response_class=HTMLResponse)
-async def list_documents(request: Request, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(PDFDocument))
-    pdfs = result.scalars().all()
-    return templates.TemplateResponse("list_documents.html", {"request": request, "pdfs": pdfs})
+async def list_documents(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    author: str = Query(None),
+    keyword: str = Query(None),
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+):
+    query = select(PDFDocument)
+    filters = []
 
+    if author:
+        filters.append(PDFDocument.author.ilike(f"%{author}%"))
+
+    if keyword:
+        filters.append(PDFDocument.keywords.any(keyword))  
+
+    if date_from:
+        try:
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
+            filters.append(PDFDocument.created_at >= date_from_parsed)
+        except ValueError:
+            pass  
+
+    if date_to:
+        try:
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
+            filters.append(PDFDocument.created_at <= date_to_parsed)
+        except ValueError:
+            pass
+
+    if filters:
+        query = query.where(and_(*filters))
+
+    result = await session.execute(query)
+    pdfs = result.scalars().all()
+
+    return templates.TemplateResponse("list_documents.html", {
+        "request": request,
+        "pdfs": pdfs,
+        "filters": {
+            "author": author or "",
+            "keyword": keyword or "",
+            "date_from": date_from or "",
+            "date_to": date_to or ""
+        }
+    })
