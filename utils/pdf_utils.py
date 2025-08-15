@@ -7,13 +7,11 @@ def extract_pdf_metadata(filepath: str) -> dict:
 
     meta = doc.metadata
     #meta keys: 'title', 'author', 'subject', 'keywords', 'creationDate', etc
-    #extract text summary: first 100 characters of first page text (optional)
-    if doc.page_count > 0:
-        first_page = doc.load_page(0)
-        text = first_page.get_text()
-        summary = text[:100].strip()
+    summary_value = meta.get("summary")
+    if summary_value:
+        summary = summary_value
     else:
-        summary = ""
+        summary = "None"
 
     #parse creation date from meta if available
     created_at = None
@@ -36,6 +34,6 @@ def extract_pdf_metadata(filepath: str) -> dict:
         "title": meta.get("title"),
         "author": meta.get("author"),
         "keywords": meta.get("keywords").split(",") if meta.get("keywords") else [],
-        "summary": summary,
+        "summary":summary,
         "created_at": created_at,
     }

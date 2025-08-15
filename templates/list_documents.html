@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}List Documents{% endblock %}
+
+{% block content %}
+<h1>Uploaded PDF Documents</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Keywords</th>
+            <th>Summary</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for pdf in pdfs %}
+        <tr>
+            <td>{{ pdf.title }}</td>
+            <td>{{ pdf.author }}</td>
+            <td>{{ pdf.keywords | join(', ') }}</td>
+            <td>{{ pdf.summary }}</td>
+            <td>{{ pdf.created_at.strftime('%Y-%m-%d %H:%M') if pdf.created_at else '' }}</td>
+            <td>
+                <a href="/uploads/{{ pdf.filename }}" target="_blank" class="button">View PDF</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

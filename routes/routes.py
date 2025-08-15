@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_400_BAD_REQUEST
 from dms.dependencies.dependencies import get_session
 from dms.models.models import PDFDocument
+from sqlalchemy.future import select
 from pathlib import Path
 import os
 
@@ -23,7 +24,7 @@ async def home_page(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @router.get("/add_document", response_class=HTMLResponse)
-async def home_page(request: Request, success: str = None):
+async def add_doc_page(request: Request, success: str = None):
     return templates.TemplateResponse(
         "add_document.html",
         {"request": request, "success": success}
@@ -31,7 +32,7 @@ async def home_page(request: Request, success: str = None):
 
 
 @router.post("/add_document", response_class=HTMLResponse)
-async def add_document(
+async def upload_document(
     request: Request,
     title: str = Form(...),
     file: UploadFile = File(...),
@@ -81,3 +82,10 @@ async def add_document(
     #success response
     context = {"request": request, "message": "Document uploaded successfully", "document": new_doc}
     return RedirectResponse(url="/add_document?success=Document uploaded successfully.", status_code=303)
+
+@router.get("/list_documents", response_class=HTMLResponse)
+async def list_documents(request: Request, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(PDFDocument))
+    pdfs = result.scalars().all()
+    return templates.TemplateResponse("list_documents.html", {"request": request, "pdfs": pdfs})
+
