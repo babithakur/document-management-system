@@ -98,13 +98,13 @@ tr:hover {
 }
 a.button {
     padding: 6px 12px;
-    background-color: #007bff;
+    background-color: #1abc9c;
     color: white;
     text-decoration: none;
     border-radius: 4px;
 }
 a.button:hover {
-    background-color: #0056b3;
+    background-color: #16a085;
 }
 
 .filter-form {
@@ -155,13 +155,13 @@ a.button:hover {
 }
 
 .btn-primary {
-    background-color: #007bff;
+    background-color: #1abc9c;
     color: white;
     border: none;
 }
 
 .btn-primary:hover {
-    background-color: #0056b3;
+    background-color: #16a085;
 }
 
 .btn-secondary {
@@ -172,4 +172,95 @@ a.button:hover {
 
 .btn-secondary:hover {
     background-color: #5a6268;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    margin-top: 20px;
+    background-color: #fff;
+    padding: 2em;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.container h1 {
+    text-align: center;
+    color: #2c3e50;
+}
+
+.container form {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2em;
+}
+
+.container input[type="text"] {
+    width: 60%;
+    padding: 0.7em;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.container button {
+    padding: 0.7em 1.2em;
+    font-size: 1em;
+    border: none;
+    background-color: #1abc9c;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+.container button:hover {
+    background-color: #16a085;
+}
+
+.container .result {
+    border-bottom: 1px solid #eee;
+    padding: 1em 0;
+}
+
+.container .result:last-child {
+    border-bottom: none;
+}
+
+.container .result-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.container .meta {
+    font-size: 0.9em;
+    color: #555;
+}
+
+.container .summary {
+    margin-top: 0.5em;
+    color: #333;
+}
+
+.container .view-button {
+    display: inline-block;
+    margin-top: 0.8em;
+    padding: 0.5em 1em;
+    background-color: #1abc9c;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.container .view-button:hover {
+    background-color: #16a085;
+}
+
+.container .no-results {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    margin-top: 2em;
 }

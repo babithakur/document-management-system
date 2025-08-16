@@ -31,9 +31,9 @@ def extract_pdf_metadata(filepath: str) -> dict:
             created_at = None
 
     return {
-        "title": meta.get("title"),
-        "author": meta.get("author"),
-        "keywords": meta.get("keywords").split(",") if meta.get("keywords") else [],
+        "title": meta.get("title") or "Unknown",
+        "author": meta.get("author") or "Unknown",
+        "keywords": meta.get("keywords").split(",") if meta.get("keywords") else ["None"],
         "summary":summary,
         "created_at": created_at,
     }

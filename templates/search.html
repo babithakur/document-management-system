@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Search Documents{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Search Documents</h1>
+        <form method="get" action="/search_documents">
+            <input type="text" name="query" value="{{ query }}" placeholder="Enter keyword..." />
+            <button type="submit">Search</button>
+        </form>
+
+        {% if query %}
+            {% if results %}
+                {% for doc in results %}
+                    <div class="result">
+                        <div class="result-title">{{ doc.title }}</div>
+                        <div class="meta">
+                            <strong>Author:</strong> {{ doc.author or "Unknown" }} |
+                            <strong>Keywords:</strong> {{ doc.keywords | join(', ') if doc.keywords else "None" }} |
+                            <strong>Created:</strong> {{ doc.created_at.strftime('%Y-%m-%d') if doc.created_at else "N/A" }}
+                        </div>
+                        <div class="summary">Summary: {{ doc.summary or "No summary available." }}</div>
+                        <a href="/uploads/{{ doc.filename }}" target="_blank" class="view-button">View PDF</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-results">No documents found for "<strong>{{ query }}</strong>".</div>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endblock %}

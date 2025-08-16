@@ -9,7 +9,7 @@ from dms.dependencies.dependencies import get_session
 from dms.models.models import PDFDocument
 from sqlalchemy.future import select
 from pathlib import Path
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 import os
 
 router = APIRouter()
@@ -131,4 +131,35 @@ async def list_documents(
             "date_from": date_from or "",
             "date_to": date_to or ""
         }
+    })
+
+@router.get("/search_documents", response_class=HTMLResponse)
+async def search_documents(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    query: str = Query("", description="Search term")
+):
+    #to search on the basis of query in title, author, summary or keyword of the pdf document
+    filters = []
+    if query:
+        filters.append(
+            or_(
+                PDFDocument.title.ilike(f"%{query}%"),
+                PDFDocument.author.ilike(f"%{query}%"),
+                PDFDocument.summary.ilike(f"%{query}%"),
+                PDFDocument.keywords.any(query)
+            )
+        )
+
+    stmt = select(PDFDocument)
+    if filters:
+        stmt = stmt.where(*filters)
+
+    result = await session.execute(stmt)
+    documents = result.scalars().all()
+
+    return templates.TemplateResponse("search.html", {
+        "request": request,
+        "results": documents,
+        "query": query
     })
