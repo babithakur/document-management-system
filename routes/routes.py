@@ -17,8 +17,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
-UPLOAD_DIR = "uploaded_pdfs"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+UPLOAD_BASE_DIR = Path(__file__).resolve().parents[1] 
+UPLOAD_DIR = UPLOAD_BASE_DIR / "uploaded_pdfs"
 
 @router.get("/", response_class=HTMLResponse)
 async def home_page(request: Request):
