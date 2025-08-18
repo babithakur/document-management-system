@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, TIMESTAMP, text, ARRAY
+from sqlalchemy import Column, Integer, Text, TIMESTAMP, text, ARRAY, Float
 from sqlalchemy.orm import declarative_base
 
 #SQLAlchemy models (i.e., table definitions)
@@ -14,4 +14,6 @@ class PDFDocument(Base):
     summary = Column(Text)
     created_at = Column(TIMESTAMP, server_default=text("CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kathmandu'"))
     filename = Column(Text)
+    embedding = Column(ARRAY(Float), nullable=True)
+
 

@@ -30,10 +30,18 @@ def extract_pdf_metadata(filepath: str) -> dict:
         except Exception:
             created_at = None
 
+    full_text = ""
+    for page in doc:
+        full_text += page.get_text()
+    
+    doc.close()
+
     return {
         "title": meta.get("title") or "Unknown",
         "author": meta.get("author") or "Unknown",
         "keywords": meta.get("keywords").split(",") if meta.get("keywords") else ["None"],
         "summary":summary,
         "created_at": created_at,
+        "full_text": full_text.strip() 
     }
+

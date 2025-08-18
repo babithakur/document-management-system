@@ -10,7 +10,9 @@ from dms.models.models import PDFDocument
 from sqlalchemy.future import select
 from pathlib import Path
 from sqlalchemy import and_, or_
+from sentence_transformers import SentenceTransformer, util
 import os
+import torch
 
 router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,6 +22,8 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 UPLOAD_BASE_DIR = Path(__file__).resolve().parents[1] 
 UPLOAD_DIR = UPLOAD_BASE_DIR / "uploaded_pdfs"
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 @router.get("/", response_class=HTMLResponse)
 async def home_page(request: Request):
@@ -66,15 +70,21 @@ async def upload_document(
 
     #using extracted title if missing, else fall back to form title
     doc_title = metadata.get("title") or title
+    author = metadata.get("author")
+    summary = metadata.get("summary")
+
+    summary_or_fallback = metadata.get("full_text")
+    embedding = model.encode(summary_or_fallback).tolist()
 
     #adding into database
     new_doc = PDFDocument(
         title=doc_title,
-        author=metadata.get("author"),
+        author=author,
         keywords=metadata.get("keywords"),
-        summary=metadata.get("summary"),
+        summary=summary,
         created_at=metadata.get("created_at"),
         filename=file.filename,
+        embedding=embedding
     )
 
     session.add(new_doc)
@@ -134,33 +144,61 @@ async def list_documents(
         }
     })
 
+
 @router.get("/search_documents", response_class=HTMLResponse)
 async def search_documents(
     request: Request,
     session: AsyncSession = Depends(get_session),
-    query: str = Query("", description="Search term")
+    query: str = Query("", description="Search term"),
 ):
-    #to search on the basis of query in title, author, summary or keyword of the pdf document
-    filters = []
-    if query:
-        filters.append(
-            or_(
-                PDFDocument.title.ilike(f"%{query}%"),
-                PDFDocument.author.ilike(f"%{query}%"),
-                PDFDocument.summary.ilike(f"%{query}%"),
-                PDFDocument.keywords.any(query)
-            )
-        )
-
-    stmt = select(PDFDocument)
-    if filters:
-        stmt = stmt.where(*filters)
-
+    #load all documents with embeddings
+    stmt = select(PDFDocument).where(PDFDocument.embedding.isnot(None))
     result = await session.execute(stmt)
-    documents = result.scalars().all()
+    all_documents = result.scalars().all()
+
+    if not query or not all_documents:
+        return templates.TemplateResponse("search.html", {
+            "request": request,
+            "results": [],
+            "query": query,
+            "use_semantic": "hybrid"
+        })
+
+    query_embedding = model.encode(query, convert_to_tensor=True)
+
+    doc_embeddings = torch.tensor([doc.embedding for doc in all_documents])
+    cos_scores = util.pytorch_cos_sim(query_embedding, doc_embeddings)[0]
+
+    #hybrid scoring
+    scored_docs = []
+    for doc, semantic_score in zip(all_documents, cos_scores):
+        semantic_score = semantic_score.item()
+
+        #simple keyword match flag 1.0 if matches, else 0.0
+        keyword_match = any([
+            query.lower() in (doc.title or "").lower(),
+            query.lower() in (doc.author or "").lower(),
+            query.lower() in (doc.summary or "").lower(),
+            any(query.lower() in kw.lower() for kw in (doc.keywords or []))
+        ])
+        keyword_score = 1.0 if keyword_match else 0.0
+
+        #final hybrid score
+        final_score = 0.4 * keyword_score + 0.6 * semantic_score
+
+        scored_docs.append((doc, final_score))
+
+    #sort documents by hybrid score
+    scored_docs.sort(key=lambda x: x[1], reverse=True)
+    #showing all documents according to relevance
+    #sorted_documents = [doc for doc, _ in scored_docs]
+    #showing only one most relevant document
+    sorted_documents = [doc for doc, _ in scored_docs[:1]]
 
     return templates.TemplateResponse("search.html", {
         "request": request,
-        "results": documents,
-        "query": query
+        "results": sorted_documents,
+        "query": query,
+        "use_semantic": "hybrid"
     })
+
